@@ -7,7 +7,7 @@ CLI_NAME="kadmap"
 CLI_VERSION="${VERSION:-latest}"  # Use VERSION env var if set, otherwise use 'latest'
 INSTALL_DIR="/usr/local/bin"
 CONFIG_DIR="$HOME/.kadmap"
-GITHUB_REPO="KadMap-Dev-Proj/dev-tool"
+GITHUB_REPO="kadmap/kadkit"
 # Fallback token if GitHub CLI is not available (replace with your token)
 GITHUB_TOKEN="${GITHUB_TOKEN:-""}"
 

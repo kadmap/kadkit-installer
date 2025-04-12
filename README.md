@@ -1,4 +1,4 @@
-# KadMap Installer
+# KadKit Installer
 
 This repository contains the official installer for the KadMap CLI tool. The installer automates the download and setup process for KadMap on Linux and macOS systems.
 
@@ -27,13 +27,13 @@ This repository contains the official installer for the KadMap CLI tool. The ins
 
 ```bash
 # Install the latest version
-curl -fsSL https://raw.githubusercontent.com/kadmap/kadmap-installer/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kadmap/kadkit-installer/main/install.sh | bash
 
 # Install a specific version
-curl -fsSL https://raw.githubusercontent.com/kadmap/kadmap-installer/main/install.sh | VERSION=v0.0.1 bash
+curl -fsSL https://raw.githubusercontent.com/kadmap/kadkit-installer/main/install.sh | VERSION=v0.0.1 bash
 
 # Install with a GitHub token (for private repositories without GitHub CLI)
-curl -fsSL https://raw.githubusercontent.com/kadmap/kadmap-installer/main/install.sh | GITHUB_TOKEN=your_token bash
+curl -fsSL https://raw.githubusercontent.com/kadmap/kadkit-installer/main/install.sh | GITHUB_TOKEN=your_token bash
 ```
 
 ### Manual Install
@@ -42,8 +42,8 @@ curl -fsSL https://raw.githubusercontent.com/kadmap/kadmap-installer/main/instal
 2. Run the installation script
 
 ```bash
-git clone https://github.com/kadmap/kadmap-installer.git
-cd kadmap-installer
+git clone https://github.com/kadmap/kadkit-installer.git
+cd kadkit-installer
 ./install.sh
 ```
 
@@ -105,7 +105,7 @@ The installer can be customized by modifying the following variables at the top 
 - `CLI_VERSION`: Version to install (default: "latest" or value of VERSION environment variable)
 - `INSTALL_DIR`: Installation directory (default: "/usr/local/bin")
 - `CONFIG_DIR`: Configuration directory (default: "$HOME/.kadmap")
-- `GITHUB_REPO`: GitHub repository to download from (default: "KadMap-Dev-Proj/dev-tool")
+- `GITHUB_REPO`: GitHub repository to download from (default: "kadmap/kadkit")
 - `GITHUB_TOKEN`: GitHub Personal Access Token (default: empty, can be set via environment variable)
 
 ## Troubleshooting
@@ -121,4 +121,4 @@ If you encounter issues during installation:
 
 ## License
 
-This installer is part of the KadMap project and is licensed under the same terms. 
+This installer is part of the KadKit project and is licensed under the same terms. 
