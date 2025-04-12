@@ -116,6 +116,25 @@ download_with_token() {
     "$ASSET_URL" | tar xz -C "$OUTPUT_DIR"
 }
 
+# Prompt for GitHub Personal Access Token
+prompt_for_github_token() {
+  echo "GitHub CLI is not available and no GitHub token found in environment."
+  echo "A GitHub Personal Access Token (PAT) with 'repo' scope is required to download releases."
+  echo 
+  echo "Please enter your GitHub Personal Access Token:"
+  read -r -s TOKEN
+  echo
+  
+  if [ -z "$TOKEN" ]; then
+    echo "Error: No token provided." >&2
+    return 1
+  fi
+  
+  # Set the token for this session
+  GITHUB_TOKEN="$TOKEN"
+  return 0
+}
+
 # Install the CLI tool
 install_cli() {
   local PLATFORM=$1
@@ -130,21 +149,27 @@ install_cli() {
       if [ -n "$GITHUB_TOKEN" ]; then
         download_with_token "$PLATFORM" "$TMP_DIR" "$CLI_VERSION" "$GITHUB_REPO" "$GITHUB_TOKEN"
       else
-        echo "Error: GitHub CLI download failed and no token provided."
-        echo "Please either install and authenticate GitHub CLI or set GITHUB_TOKEN env variable."
-        exit 1
+        prompt_for_github_token && download_with_token "$PLATFORM" "$TMP_DIR" "$CLI_VERSION" "$GITHUB_REPO" "$GITHUB_TOKEN" || {
+          echo "Error: GitHub CLI download failed and no valid token provided."
+          echo "Please either install and authenticate GitHub CLI or set GITHUB_TOKEN env variable."
+          exit 1
+        }
       fi
     }
   else
     if [ -n "$GITHUB_TOKEN" ]; then
       download_with_token "$PLATFORM" "$TMP_DIR" "$CLI_VERSION" "$GITHUB_REPO" "$GITHUB_TOKEN"
     else
-      echo "Error: GitHub CLI not available and no token provided."
-      echo "Please either:"
-      echo "1. Install GitHub CLI and authenticate with 'gh auth login'"
-      echo "2. Set GITHUB_TOKEN environment variable with a valid token"
-      echo "3. Edit this script to include your token"
-      exit 1
+      # Prompt for token if not in environment
+      if prompt_for_github_token; then
+        download_with_token "$PLATFORM" "$TMP_DIR" "$CLI_VERSION" "$GITHUB_REPO" "$GITHUB_TOKEN"
+      else
+        echo "Error: GitHub CLI not available and no valid token provided."
+        echo "Please either:"
+        echo "1. Install GitHub CLI and authenticate with 'gh auth login'"
+        echo "2. Set GITHUB_TOKEN environment variable with a valid token"
+        exit 1
+      fi
     fi
   fi
   
