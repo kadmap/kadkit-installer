@@ -105,7 +105,7 @@ The installer can be customized by modifying the following variables at the top 
 - `CLI_VERSION`: Version to install (default: "latest" or value of VERSION environment variable)
 - `INSTALL_DIR`: Installation directory (default: "/usr/local/bin")
 - `CONFIG_DIR`: Configuration directory (default: "$HOME/.kadmap")
-- `GITHUB_REPO`: GitHub repository to download from (default: "kadmap/devtool")
+- `GITHUB_REPO`: GitHub repository to download from (default: "KadMap-Dev-Proj/dev-tool")
 - `GITHUB_TOKEN`: GitHub Personal Access Token (default: empty, can be set via environment variable)
 
 ## Troubleshooting
@@ -117,6 +117,7 @@ If you encounter issues during installation:
 - **Download failures**: 
   - For GitHub CLI: Verify you're logged in with `gh auth status`
   - For token: Verify your GitHub token has the correct permissions
+  - If using a private repo, make sure you have access to it
 
 ## License
 
