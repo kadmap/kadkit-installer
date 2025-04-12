@@ -8,10 +8,22 @@ CLI_VERSION="${VERSION:-latest}"  # Use VERSION env var if set, otherwise use 'l
 INSTALL_DIR="/usr/local/bin"
 CONFIG_DIR="$HOME/.kadmap"
 GITHUB_REPO="kadmap/devtool"
+# Fallback token if GitHub CLI is not available (replace with your token)
+GITHUB_TOKEN="${GITHUB_TOKEN:-""}"
 
 # Print step information
 print_step() {
   echo "===> $1"
+}
+
+# Check if GitHub CLI is available and authenticated
+check_github_cli() {
+  if command -v gh &>/dev/null; then
+    if gh auth status &>/dev/null; then
+      return 0  # GitHub CLI is available and authenticated
+    fi
+  fi
+  return 1  # GitHub CLI is not available or not authenticated
 }
 
 # Detect the operating system and architecture
@@ -45,6 +57,65 @@ check_dependencies() {
   done
 }
 
+# Download with GitHub CLI
+download_with_gh_cli() {
+  local PLATFORM=$1
+  local OUTPUT_DIR=$2
+  local VERSION=$3
+  local REPO=$4
+  
+  print_step "Using GitHub CLI to download release"
+  
+  # For latest release
+  if [ "$VERSION" = "latest" ]; then
+    gh release download --repo "$REPO" --pattern "*$PLATFORM.tar.gz" --dir "$OUTPUT_DIR"
+  else
+    # For specific version
+    gh release download "$VERSION" --repo "$REPO" --pattern "*$PLATFORM.tar.gz" --dir "$OUTPUT_DIR"
+  fi
+  
+  # Extract the downloaded archive
+  tar xzf "$OUTPUT_DIR"/*"$PLATFORM.tar.gz" -C "$OUTPUT_DIR"
+  
+  # Remove the archive file after extraction
+  rm "$OUTPUT_DIR"/*"$PLATFORM.tar.gz"
+}
+
+# Download with curl and token
+download_with_token() {
+  local PLATFORM=$1
+  local OUTPUT_DIR=$2
+  local VERSION=$3
+  local REPO=$4
+  local TOKEN=$5
+  
+  print_step "Using personal access token to download release"
+  
+  local API_URL
+  if [ "$VERSION" = "latest" ]; then
+    API_URL="https://api.github.com/repos/$REPO/releases/latest"
+  else
+    API_URL="https://api.github.com/repos/$REPO/releases/tags/$VERSION"
+  fi
+  
+  # Get the asset download URL with token authentication
+  local ASSET_URL
+  ASSET_URL=$(curl -s -H "Authorization: token $TOKEN" $API_URL | 
+    grep -o "https://.*$CLI_NAME-$PLATFORM.tar.gz" | 
+    head -n 1)
+  
+  if [ -z "$ASSET_URL" ]; then
+    echo "Error: Could not find release asset for platform $PLATFORM" >&2
+    exit 1
+  fi
+  
+  print_step "Downloading from $ASSET_URL"
+  
+  # Download and extract with authentication
+  curl -sL -H "Authorization: token $TOKEN" -H "Accept: application/octet-stream" \
+    "$ASSET_URL" | tar xz -C "$OUTPUT_DIR"
+}
+
 # Install the CLI tool
 install_cli() {
   local PLATFORM=$1
@@ -53,25 +124,34 @@ install_cli() {
   
   print_step "Downloading $CLI_NAME ($CLI_VERSION) for $PLATFORM"
   
-  # Download the archive
-  local GITHUB_TOKEN="your_personal_access_token"
-  local DOWNLOAD_URL="https://api.github.com/repos/$GITHUB_REPO/releases/tags/$CLI_VERSION"
-  
-  # Get the asset download URL
-  asset_url=$(curl -s -H "Authorization: token $GITHUB_TOKEN" $DOWNLOAD_URL | 
-    grep -o "https://.*$CLI_NAME-$PLATFORM.tar.gz" | 
-    head -n 1)
-  
-  print_step "Downloading from $asset_url"
-  
-  # Download and extract with authentication
-  curl -sL -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/octet-stream" \
-    "$asset_url" | tar xz -C "$TMP_DIR"
+  # Try GitHub CLI first, fall back to token if needed
+  if check_github_cli; then
+    download_with_gh_cli "$PLATFORM" "$TMP_DIR" "$CLI_VERSION" "$GITHUB_REPO" || {
+      if [ -n "$GITHUB_TOKEN" ]; then
+        download_with_token "$PLATFORM" "$TMP_DIR" "$CLI_VERSION" "$GITHUB_REPO" "$GITHUB_TOKEN"
+      else
+        echo "Error: GitHub CLI download failed and no token provided."
+        echo "Please either install and authenticate GitHub CLI or set GITHUB_TOKEN env variable."
+        exit 1
+      fi
+    }
+  else
+    if [ -n "$GITHUB_TOKEN" ]; then
+      download_with_token "$PLATFORM" "$TMP_DIR" "$CLI_VERSION" "$GITHUB_REPO" "$GITHUB_TOKEN"
+    else
+      echo "Error: GitHub CLI not available and no token provided."
+      echo "Please either:"
+      echo "1. Install GitHub CLI and authenticate with 'gh auth login'"
+      echo "2. Set GITHUB_TOKEN environment variable with a valid token"
+      echo "3. Edit this script to include your token"
+      exit 1
+    fi
+  fi
   
   # Directory where the extracted content is located
   local EXTRACT_DIR="$TMP_DIR/$CLI_NAME-$PLATFORM"
   
-  print_step "Installing $CLI_NAME to $INSTALL_DIdR"
+  print_step "Installing $CLI_NAME to $INSTALL_DIR"
   
   # Ensure install directory exists and is writable
   if [ ! -d "$INSTALL_DIR" ]; then

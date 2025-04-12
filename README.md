@@ -9,6 +9,9 @@ This repository contains the official installer for the KadMap CLI tool. The ins
 - Installation to standard system directories
 - Automatic PATH configuration
 - Configuration template setup
+- Multiple authentication methods for private repositories
+  - GitHub CLI authentication
+  - Personal access token
 
 ## Requirements
 
@@ -16,6 +19,7 @@ This repository contains the official installer for the KadMap CLI tool. The ins
 - curl
 - tar
 - gzip
+- GitHub CLI (optional, for seamless authentication)
 
 ## Usage
 
@@ -27,6 +31,9 @@ curl -fsSL https://raw.githubusercontent.com/kadmap/kadmap-installer/main/instal
 
 # Install a specific version
 curl -fsSL https://raw.githubusercontent.com/kadmap/kadmap-installer/main/install.sh | VERSION=v0.0.1 bash
+
+# Install with a GitHub token (for private repositories without GitHub CLI)
+curl -fsSL https://raw.githubusercontent.com/kadmap/kadmap-installer/main/install.sh | GITHUB_TOKEN=your_token bash
 ```
 
 ### Manual Install
@@ -51,16 +58,43 @@ The installer:
 5. Sets up configuration templates in `~/.kadmap`
 6. Updates your PATH if necessary
 
-## Private Repository Configuration
+## Authentication Methods
 
-This installer is designed to work with private GitHub repositories. Before using, you need to:
+The installer supports multiple methods for accessing private GitHub repositories:
 
-1. Generate a GitHub Personal Access Token with `repo` permissions
-2. Replace `your_personal_access_token` in the script with your actual token
+### 1. GitHub CLI (Recommended)
+
+If you have GitHub CLI installed and authenticated, the installer will automatically use it to download releases:
 
 ```bash
-# Example token configuration
-local GITHUB_TOKEN="ghp_youractualtoken123456789"
+# Install GitHub CLI
+# For Ubuntu
+sudo apt install gh
+
+# For macOS
+brew install gh
+
+# Authenticate (follow the prompts)
+gh auth login
+
+# Then run the installer (no token needed)
+./install.sh
+```
+
+### 2. Personal Access Token
+
+If GitHub CLI is not available, you can provide a GitHub Personal Access Token:
+
+```bash
+# Run with token as environment variable
+GITHUB_TOKEN=your_token ./install.sh
+```
+
+Alternatively, you can edit the script to include your token permanently:
+
+```bash
+# In install.sh, edit this line:
+GITHUB_TOKEN="${GITHUB_TOKEN:-"your_personal_access_token"}"
 ```
 
 ## Customization
@@ -72,6 +106,7 @@ The installer can be customized by modifying the following variables at the top 
 - `INSTALL_DIR`: Installation directory (default: "/usr/local/bin")
 - `CONFIG_DIR`: Configuration directory (default: "$HOME/.kadmap")
 - `GITHUB_REPO`: GitHub repository to download from (default: "kadmap/devtool")
+- `GITHUB_TOKEN`: GitHub Personal Access Token (default: empty, can be set via environment variable)
 
 ## Troubleshooting
 
@@ -79,7 +114,9 @@ If you encounter issues during installation:
 
 - **Permission denied errors**: The script will attempt to use `sudo` when necessary
 - **PATH issues**: You may need to restart your terminal or source your shell configuration file
-- **Download failures**: Verify your GitHub token has the correct permissions
+- **Download failures**: 
+  - For GitHub CLI: Verify you're logged in with `gh auth status`
+  - For token: Verify your GitHub token has the correct permissions
 
 ## License
 
