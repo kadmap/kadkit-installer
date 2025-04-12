@@ -55,6 +55,30 @@ check_dependencies() {
       exit 1
     fi
   done
+
+  # Check for Docker and Docker Compose
+  print_step "Checking for Docker and Docker Compose"
+  
+  # Check for Docker
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Warning: Docker is not installed, but will be needed for KadMap functionality." >&2
+    echo "Please install Docker from https://docs.docker.com/get-docker/" >&2
+  else
+    echo "✓ Docker is installed"
+    
+    # Check for Docker Compose (both v2 and v1)
+    if docker compose version >/dev/null 2>&1; then
+      echo "✓ Docker Compose (v2) is installed"
+    elif command -v docker-compose >/dev/null 2>&1; then
+      echo "✓ Docker Compose (v1) is installed"
+    else
+      echo "Warning: Docker Compose is not installed, but will be needed for KadMap functionality." >&2
+      echo "Please install Docker Compose using one of these methods:" >&2
+      echo "  - Update Docker Desktop (includes Docker Compose v2)" >&2
+      echo "  - For Docker Compose v2: https://docs.docker.com/compose/install/" >&2
+      echo "  - For Docker Compose v1: https://docs.docker.com/compose/install/standalone/" >&2
+    fi
+  fi
 }
 
 # Download with GitHub CLI
